@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Мои прочитанные книги</title>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+  <header class="site-header">
+    <h1>Мои прочитанные книги</h1>
+    <nav>
+      <a href="index.html">Книги</a>
+      <a href="diary.html">Дневник чтения</a>
+      <a href="README.md" target="_blank">Инструкция</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section id="books-list" class="grid"></section>
+  </main>
+
+  <template id="card-tpl">
+    <article class="card">
+      <img class="cover" src="" alt="обложка">
+      <div class="meta">
+        <h2 class="title"></h2>
+        <p class="author"></p>
+        <p class="note-preview"></p>
+        <a class="open" href="#">Открыть заметку</a>
+      </div>
+    </article>
+  </template>
+
+  <div id="viewer" class="viewer" hidden>
+    <button id="close-view">×</button>
+    <article id="content"></article>
+  </div>
+
+  <script>
+  // Загрузка списка книг из data/books/index.json
+  async function fetchJSON(path){ const r=await fetch(path); if(!r.ok) return null; return r.json(); }
+  async function init(){
+    const list = await fetchJSON('data/books/index.json') || [];
+    const container = document.getElementById('books-list');
+    const tpl = document.getElementById('card-tpl');
+    for(const item of list){
+      const el = tpl.content.cloneNode(true);
+      el.querySelector('.cover').src = item.cover || 'assets/placeholder.png';
+      el.querySelector('.cover').alt = item.title;
+      el.querySelector('.title').textContent = item.title;
+      el.querySelector('.author').textContent = item.author || '';
+      el.querySelector('.note-preview').textContent = item.preview || '';
+      const open = el.querySelector('.open');
+      open.href = '#';
+      open.addEventListener('click', async (e)=>{
+        e.preventDefault();
+        const md = await fetch('data/books/'+item.file).then(r=>r.text());
+        document.getElementById('content').innerHTML = marked.parse(md);
+        document.getElementById('viewer').hidden = false;
+      });
+      container.appendChild(el);
+    }
+  }
+  document.getElementById && init();
+
+  document.getElementById('close-view').addEventListener('click', ()=> {
+    document.getElementById('viewer').hidden = true;
+    document.getElementById('content').innerHTML = '';
+  });
+  </script>
+</body>
+</html>
